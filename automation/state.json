@@ -1,0 +1,18 @@
+{
+  "task": "weekly",
+  "status": "ok",
+  "started_at": "2026-05-14T07:07:27Z",
+  "finished_at": "2026-05-14T07:07:27Z",
+  "artifacts": [
+    "/home/zhangtongzhe/Codework/Spark_automation/research/reports/research_dry_run_20260514_150727.md",
+    "/home/zhangtongzhe/Codework/Spark_automation/research/ideas/strategy_ideas.jsonl",
+    "/home/zhangtongzhe/Codework/Spark_automation/research/candidates/ce1cb7b87b2541f7.yaml",
+    "/home/zhangtongzhe/Codework/Spark_automation/research/candidates/bcfc45a2dc383ac0.yaml",
+    "/home/zhangtongzhe/Codework/Spark_automation/research/candidates/db22756fa503a35f.yaml",
+    "/home/zhangtongzhe/Codework/Spark_automation/research/experiments/candidate_experiments.jsonl",
+    "/home/zhangtongzhe/Codework/Spark_automation/automation/reports/experiment_20260514.md",
+    "/home/zhangtongzhe/Codework/Spark_automation/automation/reports/weekly_20260514.md"
+  ],
+  "errors": [],
+  "sent": false
+}

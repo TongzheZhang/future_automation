@@ -1,0 +1,10 @@
+{
+  "analysis_mode": "fallback",
+  "articles_fetched": 3,
+  "articles_new": 3,
+  "dry_run": true,
+  "errors": [],
+  "ideas_generated": 3,
+  "last_run_at": "2026-05-14T15:07:27",
+  "report_path": "/home/zhangtongzhe/Codework/Spark_automation/research/reports/research_dry_run_20260514_150727.md"
+}

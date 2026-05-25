@@ -1,0 +1,106 @@
+# 监控的期货品种
+# exchange: 交易所代码  symbol: AKShare合约代码
+contracts:
+  # 黑色系
+  - name: "螺纹钢"
+    symbol: "RB"
+    exchange: "SHFE"
+    akshare_symbol: "RB0"
+    lot_size: 10
+    margin_rate: 0.10
+    
+  - name: "铁矿石"
+    symbol: "I"
+    exchange: "DCE"
+    akshare_symbol: "I0"
+    lot_size: 100
+    margin_rate: 0.12
+    
+  - name: "热卷"
+    symbol: "HC"
+    exchange: "SHFE"
+    akshare_symbol: "HC0"
+    lot_size: 10
+    margin_rate: 0.10
+    
+  - name: "焦煤"
+    symbol: "JM"
+    exchange: "DCE"
+    akshare_symbol: "JM0"
+    lot_size: 60
+    margin_rate: 0.15
+
+  # 化工
+  - name: "PTA"
+    symbol: "TA"
+    exchange: "ZCE"
+    akshare_symbol: "TA0"
+    lot_size: 5
+    margin_rate: 0.08
+    
+  - name: "甲醇"
+    symbol: "MA"
+    exchange: "ZCE"
+    akshare_symbol: "MA0"
+    lot_size: 10
+    margin_rate: 0.08
+    
+  - name: "纯碱"
+    symbol: "SA"
+    exchange: "ZCE"
+    akshare_symbol: "SA0"
+    lot_size: 20
+    margin_rate: 0.10
+
+  # 有色金属
+  - name: "沪铜"
+    symbol: "CU"
+    exchange: "SHFE"
+    akshare_symbol: "CU0"
+    lot_size: 5
+    margin_rate: 0.10
+    
+  - name: "沪铝"
+    symbol: "AL"
+    exchange: "SHFE"
+    akshare_symbol: "AL0"
+    lot_size: 5
+    margin_rate: 0.08
+
+  # 农产品
+  - name: "豆粕"
+    symbol: "M"
+    exchange: "DCE"
+    akshare_symbol: "M0"
+    lot_size: 10
+    margin_rate: 0.08
+    
+  - name: "棕榈油"
+    symbol: "P"
+    exchange: "DCE"
+    akshare_symbol: "P0"
+    lot_size: 10
+    margin_rate: 0.10
+    
+  - name: "生猪"
+    symbol: "LH"
+    exchange: "DCE"
+    akshare_symbol: "LH0"
+    lot_size: 16
+    margin_rate: 0.12
+
+  # 贵金属
+  - name: "沪银"
+    symbol: "AG"
+    exchange: "SHFE"
+    akshare_symbol: "AG0"
+    lot_size: 15
+    margin_rate: 0.12
+
+  # 能源
+  - name: "原油"
+    symbol: "SC"
+    exchange: "INE"
+    akshare_symbol: "SC0"
+    lot_size: 1000
+    margin_rate: 0.15

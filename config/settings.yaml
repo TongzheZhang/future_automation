@@ -1,0 +1,48 @@
+# Spark 自进化期货投研系统 - 全局配置
+system:
+  name: "Spark Futures Intelligence"
+  version: "0.1.0"
+  timezone: "Asia/Shanghai"
+
+data:
+  storage_path: "data/storage"
+  # 数据源优先级: akshare > tushare
+  sources:
+    - akshare
+    - tushare
+  # 缓存天数
+  cache_days: 365
+
+backtest:
+  initial_capital: 1000000  # 初始资金 100万
+  commission_rate: 0.000023  # 手续费 万0.23
+  slippage: 0.0001          # 滑点 万1
+  min_bars: 100             # 最少需要的历史K线数
+
+trading:
+  # 单品种最大仓位占比
+  max_position_pct: 0.3
+  # 单日最大交易次数
+  max_trades_per_day: 5
+  # 止损比例
+  stop_loss_pct: 0.02
+
+evolution:
+  # 策略失效判定：连续亏损天数
+  failure_days: 10
+  # 进化周期：每N个交易日触发一次进化
+  evolution_cycle_days: 20
+  # 优胜策略数量
+  elite_count: 3
+
+notify:
+  channel: "feishu"
+  # 飞书用户 open_id（可从环境变量 FEISHU_OPEN_ID 覆盖）
+  feishu_open_id: "ou_5c92160942520c8fe9af332b6e255e75"
+  # OpenClaw workspace 路径（可从环境变量 OPENCLAW_WORKSPACE 覆盖）
+  workspace: "/home/zhangtongzhe/.openclaw/workspace"
+  # 每日信号推送时间 (HH:MM)
+  signal_time: "09:15"
+  afternoon_signal_time: "14:00"
+  # 报告推送时间
+  report_time: "16:30"

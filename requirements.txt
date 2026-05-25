@@ -1,0 +1,9 @@
+# Spark 自进化期货投研系统 - 依赖
+akshare>=1.12.0
+pandas>=2.0.0
+numpy>=1.24.0
+pyarrow>=15.0.0
+matplotlib>=3.7.0
+pyyaml>=6.0
+tabulate>=0.9.0
+loguru>=0.7.0
