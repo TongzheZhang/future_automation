@@ -1,48 +1,196 @@
-# Spark 自进化期货投研系统 - 全局配置
-system:
-  name: "Spark Futures Intelligence"
-  version: "0.1.0"
-  timezone: "Asia/Shanghai"
+# 政策-基本面期货投研系统配置
 
-data:
-  storage_path: "data/storage"
-  # 数据源优先级: akshare > tushare
-  sources:
-    - akshare
-    - tushare
-  # 缓存天数
-  cache_days: 365
+# LLM 配置（OpenRouter）
+llm:
+  api_key: ""  # 请从环境变量 OPENROUTER_API_KEY 读取，或手动填入
+  base_url: "https://openrouter.ai/api/v1"
+  default_model: "deepseek/deepseek-chat"
+  fallback_model: "deepseek/deepseek-chat"
+  reasoning_model: "deepseek/deepseek-r1"
+  # 模型选择映射
+  models:
+    policy_analysis: "deepseek/deepseek-chat"          # 政策文本分析
+    chain_reasoning: "deepseek/deepseek-chat"           # 产业链推理
+    signal_synthesis: "deepseek/deepseek-chat"          # 信号综合评估
+    data_extraction: "deepseek/deepseek-chat"           # 结构化数据提取
+    summary: "deepseek/deepseek-chat"                   # 摘要总结
 
-backtest:
-  initial_capital: 1000000  # 初始资金 100万
-  commission_rate: 0.000023  # 手续费 万0.23
-  slippage: 0.0001          # 滑点 万1
-  min_bars: 100             # 最少需要的历史K线数
+# 监控品种（按产业链分组）
+monitored_commodities:
+  # 黑色系
+  black:
+    - code: "RB"
+      name: "螺纹钢"
+      exchange: "SHFE"
+      related_policies: ["发改委", "工信部", "生态环境部", "住建部"]
+      alpha_pai_keywords: ["螺纹钢", "钢铁", "粗钢产量", "地产开工"]
+    - code: "I"
+      name: "铁矿石"
+      exchange: "DCE"
+      related_policies: ["发改委", "工信部", "自然资源部"]
+      alpha_pai_keywords: ["铁矿石", "进口矿", "矿山", "巴西", "澳洲"]
+    - code: "J"
+      name: "焦炭"
+      exchange: "DCE"
+      related_policies: ["发改委", "生态环境部"]
+      alpha_pai_keywords: ["焦炭", "焦煤", "焦化", "双焦"]
+  
+  # 能源化工
+  energy_chemical:
+    - code: "SC"
+      name: "原油"
+      exchange: "INE"
+      related_policies: ["发改委", "能源局", "商务部"]
+      alpha_pai_keywords: ["原油", "OPEC", "页岩油", "原油库存"]
+    - code: "TA"
+      name: "PTA"
+      exchange: "ZCE"
+      related_policies: ["发改委", "工信部"]
+      alpha_pai_keywords: ["PTA", "聚酯", "PX", "纺织"]
+    - code: "MA"
+      name: "甲醇"
+      exchange: "ZCE"
+      related_policies: ["发改委", "能源局"]
+      alpha_pai_keywords: ["甲醇", "煤制甲醇", "烯烃"]
+    - code: "L"
+      name: "聚乙烯"
+      exchange: "DCE"
+      related_policies: ["发改委", "工信部"]
+      alpha_pai_keywords: ["聚乙烯", "PE", "塑料", "聚烯烃"]
+  
+  # 农产品
+  agriculture:
+    - code: "M"
+      name: "豆粕"
+      exchange: "DCE"
+      related_policies: ["农业农村部", "发改委", "海关总署"]
+      alpha_pai_keywords: ["豆粕", "大豆", "巴西大豆", "美豆", "压榨"]
+    - code: "C"
+      name: "玉米"
+      exchange: "DCE"
+      related_policies: ["农业农村部", "发改委", "国家粮食和物资储备局"]
+      alpha_pai_keywords: ["玉米", "临储", "饲用", "深加工"]
+    - code: "CF"
+      name: "棉花"
+      exchange: "ZCE"
+      related_policies: ["农业农村部", "发改委", "商务部"]
+      alpha_pai_keywords: ["棉花", "新疆棉", "纺织", "USDA"]
+    - code: "P"
+      name: "棕榈油"
+      exchange: "DCE"
+      related_policies: ["海关总署", "商务部"]
+      alpha_pai_keywords: ["棕榈油", "马棕", "印尼", "生物柴油"]
+  
+  # 有色金属
+  nonferrous:
+    - code: "CU"
+      name: "铜"
+      exchange: "SHFE"
+      related_policies: ["发改委", "工信部", "商务部", "海关总署"]
+      alpha_pai_keywords: ["铜", "铜矿", "冶炼", "新能源铜", "LME铜"]
+    - code: "AL"
+      name: "铝"
+      exchange: "SHFE"
+      related_policies: ["发改委", "工信部", "生态环境部"]
+      alpha_pai_keywords: ["铝", "电解铝", "氧化铝", "云南", "产能置换"]
+    - code: "NI"
+      name: "镍"
+      exchange: "SHFE"
+      related_policies: ["发改委", "工信部", "商务部"]
+      alpha_pai_keywords: ["镍", "镍矿", "不锈钢", "镍铁", "印尼镍"]
+  
+  # 贵金属
+  precious:
+    - code: "AU"
+      name: "黄金"
+      exchange: "SHFE"
+      related_policies: ["央行", "外汇管理局"]
+      alpha_pai_keywords: ["黄金", "美联储", "实际利率", "央行购金"]
+    - code: "AG"
+      name: "白银"
+      exchange: "SHFE"
+      related_policies: ["央行", "工信部"]
+      alpha_pai_keywords: ["白银", "光伏银浆", "工业银"]
 
-trading:
-  # 单品种最大仓位占比
-  max_position_pct: 0.3
-  # 单日最大交易次数
-  max_trades_per_day: 5
-  # 止损比例
-  stop_loss_pct: 0.02
+# 政策数据源配置
+policy_sources:
+  # 国务院
+  gov_cn:
+    name: "中国政府网"
+    url: "http://www.gov.cn/zhengce/zhengceku/"
+    priority: 1
+  
+  # 各部委 RSS/网站
+  ministries:
+    - name: "国家发改委"
+      url: "https://www.ndrc.gov.cn/xxgk/"
+      rss: null
+      priority: 1
+    - name: "工信部"
+      url: "https://www.miit.gov.cn/zwgk/zcwj/"
+      rss: null
+      priority: 1
+    - name: "商务部"
+      url: "https://www.mofcom.gov.cn/article/b/"
+      rss: null
+      priority: 1
+    - name: "农业农村部"
+      url: "http://www.moa.gov.cn/gk/zcfg/"
+      rss: null
+      priority: 1
+    - name: "生态环境部"
+      url: "https://www.mee.gov.cn/xxgk2018/xxgk/xxgk15/"
+      rss: null
+      priority: 2
+    - name: "国家能源局"
+      url: "https://www.nea.gov.cn/xxgk/"
+      rss: null
+      priority: 2
+    - name: "中国人民银行"
+      url: "http://www.pbc.gov.cn/zhengcehuobisi/"
+      rss: null
+      priority: 1
+    - name: "海关总署"
+      url: "http://www.customs.gov.cn/customs/302249/"
+      rss: null
+      priority: 2
 
-evolution:
-  # 策略失效判定：连续亏损天数
-  failure_days: 10
-  # 进化周期：每N个交易日触发一次进化
-  evolution_cycle_days: 20
-  # 优胜策略数量
-  elite_count: 3
+# 搜索配置（Brave Search）
+search:
+  brave_api_key: ""  # 请从环境变量 BRAVE_API_KEY 读取，或手动填入
+  brave_base_url: "https://api.search.brave.com/res/v1/web/search"
 
-notify:
-  channel: "feishu"
-  # 飞书用户 open_id（可从环境变量 FEISHU_OPEN_ID 覆盖）
-  feishu_open_id: "ou_5c92160942520c8fe9af332b6e255e75"
-  # OpenClaw workspace 路径（可从环境变量 OPENCLAW_WORKSPACE 覆盖）
-  workspace: "/home/zhangtongzhe/.openclaw/workspace"
-  # 每日信号推送时间 (HH:MM)
-  signal_time: "09:15"
-  afternoon_signal_time: "14:00"
-  # 报告推送时间
-  report_time: "16:30"
+# 数据采集配置
+data_collection:
+  policy_check_interval_minutes: 30
+  fundamental_update_time: "09:00"  # 每日基本面数据更新时间
+  market_data_interval_minutes: 5
+  
+# 信号生成阈值
+signal_thresholds:
+  min_confidence: 0.7           # 最低置信度
+  min_policy_relevance: 0.6     # 最低政策相关度
+  min_fundamental_score: 0.6    # 最低基本面得分
+  max_holding_days: 30          # 最大持仓周期
+
+# 日内T+0交易配置
+intraday:
+  scan_time: "09:05"            # 开盘扫描时间
+  close_time: "14:55"           # 平仓时间
+  review_time: "19:00"          # 复盘时间
+  min_confidence: 7             # 最低置信度（0-10）
+  max_trades_per_day: 3         # 每日最大交易次数
+  default_focus: ["RB", "M", "CU", "I", "SC", "AL", "AU"]  # 默认扫描品种
+  trading_days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+
+# 行情数据源
+market_data:
+  source: "sina"
+  base_url: "http://hq.sinajs.cn/list={code}"
+  encoding: "gbk"
+
+# 报告配置
+reporting:
+  daily_report_time: "08:30"
+  output_format: "markdown"
+  save_path: "reports/daily"
