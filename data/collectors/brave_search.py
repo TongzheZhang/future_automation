@@ -35,8 +35,9 @@ class BraveSearchCollector:
         self.api_key = search_cfg.get("brave_api_key")
         self.base_url = search_cfg.get("brave_base_url", "https://api.search.brave.com/res/v1/web/search")
         
+        self.enabled = bool(self.api_key)
         if not self.api_key:
-            raise ValueError("Brave API Key 未配置")
+            logger.warning("Brave API Key 未配置，搜索功能将返回空结果（不影响信号生成）")
         
         self._session: Optional[aiohttp.ClientSession] = None
     
@@ -69,6 +70,9 @@ class BraveSearchCollector:
             search_lang: 搜索语言
             freshness: 时间过滤
         """
+        if not self.enabled:
+            return []
+        
         session = await self._get_session()
         
         params = {
@@ -163,7 +167,10 @@ class BraveSearchCollector:
     
     async def close(self):
         if self._session and not self._session.closed:
-            await self._session.close()
+            try:
+                await self._session.close()
+            except Exception:
+                pass
     
     async def __aenter__(self):
         return self

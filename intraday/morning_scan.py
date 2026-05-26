@@ -22,6 +22,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from intraday.strategy import IntradayStrategy
 from intraday.record import save_signals
 from intraday.models import IntradaySignal
+from data.collectors.minute_data import MinuteDataCollector
 
 logging.basicConfig(
     level=logging.INFO,
@@ -57,6 +58,7 @@ async def run_morning_scan(
     date_str = datetime.now().strftime("%Y-%m-%d")
     logger.info("=" * 60)
     logger.info(f"[{date_str}] 09:05 开盘扫描开始")
+    logger.info(f"策略时间窗口: 09:05 开仓 → 14:55 平仓")
     logger.info("=" * 60)
     
     strategy = IntradayStrategy()
@@ -76,6 +78,27 @@ async def run_morning_scan(
         # 扫描
         signals = await strategy.scan_all(commodities)
         
+        # 用 AKShare 分钟线校正精确入场价
+        minute_collector = MinuteDataCollector()
+        for sig in signals:
+            if not sig.should_trade():
+                continue
+            precise_entry = minute_collector.get_entry_price(sig.commodity)
+            open_price = minute_collector.get_open_price(sig.commodity)
+            if precise_entry is not None:
+                old_entry = sig.entry_price
+                sig.entry_price = precise_entry
+                if sig.market_snapshot:
+                    sig.market_snapshot.last = precise_entry
+                diff = round(precise_entry - old_entry, 2)
+                open_diff = round(precise_entry - open_price, 2) if open_price is not None else None
+                logger.info(
+                    f"[{sig.commodity}] 09:05精确价校正: {old_entry} -> {precise_entry} "
+                    f"(与信号差异:{diff:+}, 与09:00开盘差异:{open_diff:+})"
+                )
+            else:
+                logger.warning(f"[{sig.commodity}] 无法获取09:05分钟线，保留信号原始入场价")
+        
         # 保存信号
         all_signals = []
         # 先保存所有扫描结果（包括观望的）
@@ -87,6 +110,8 @@ async def run_morning_scan(
         # 生成报告
         report_lines = [
             f"# 日内交易信号 ({date_str} 09:05)",
+            "",
+            f"**策略时间窗口**: 09:05 开仓 → 14:55 平仓",
             "",
             f"扫描品种数: {len(commodities)}",
             f"有效信号数: {len(signals)}",

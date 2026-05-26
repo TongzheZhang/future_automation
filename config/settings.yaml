@@ -22,96 +22,180 @@ monitored_commodities:
     - code: "RB"
       name: "螺纹钢"
       exchange: "SHFE"
-      related_policies: ["发改委", "工信部", "生态环境部", "住建部"]
-      alpha_pai_keywords: ["螺纹钢", "钢铁", "粗钢产量", "地产开工"]
     - code: "I"
       name: "铁矿石"
       exchange: "DCE"
-      related_policies: ["发改委", "工信部", "自然资源部"]
-      alpha_pai_keywords: ["铁矿石", "进口矿", "矿山", "巴西", "澳洲"]
     - code: "J"
       name: "焦炭"
       exchange: "DCE"
-      related_policies: ["发改委", "生态环境部"]
-      alpha_pai_keywords: ["焦炭", "焦煤", "焦化", "双焦"]
-  
-  # 能源化工
-  energy_chemical:
-    - code: "SC"
-      name: "原油"
-      exchange: "INE"
-      related_policies: ["发改委", "能源局", "商务部"]
-      alpha_pai_keywords: ["原油", "OPEC", "页岩油", "原油库存"]
-    - code: "TA"
-      name: "PTA"
-      exchange: "ZCE"
-      related_policies: ["发改委", "工信部"]
-      alpha_pai_keywords: ["PTA", "聚酯", "PX", "纺织"]
-    - code: "MA"
-      name: "甲醇"
-      exchange: "ZCE"
-      related_policies: ["发改委", "能源局"]
-      alpha_pai_keywords: ["甲醇", "煤制甲醇", "烯烃"]
-    - code: "L"
-      name: "聚乙烯"
+    - code: "JM"
+      name: "焦煤"
       exchange: "DCE"
-      related_policies: ["发改委", "工信部"]
-      alpha_pai_keywords: ["聚乙烯", "PE", "塑料", "聚烯烃"]
-  
-  # 农产品
-  agriculture:
-    - code: "M"
-      name: "豆粕"
-      exchange: "DCE"
-      related_policies: ["农业农村部", "发改委", "海关总署"]
-      alpha_pai_keywords: ["豆粕", "大豆", "巴西大豆", "美豆", "压榨"]
-    - code: "C"
-      name: "玉米"
-      exchange: "DCE"
-      related_policies: ["农业农村部", "发改委", "国家粮食和物资储备局"]
-      alpha_pai_keywords: ["玉米", "临储", "饲用", "深加工"]
-    - code: "CF"
-      name: "棉花"
-      exchange: "ZCE"
-      related_policies: ["农业农村部", "发改委", "商务部"]
-      alpha_pai_keywords: ["棉花", "新疆棉", "纺织", "USDA"]
-    - code: "P"
-      name: "棕榈油"
-      exchange: "DCE"
-      related_policies: ["海关总署", "商务部"]
-      alpha_pai_keywords: ["棕榈油", "马棕", "印尼", "生物柴油"]
-  
+    - code: "HC"
+      name: "热轧卷板"
+      exchange: "SHFE"
   # 有色金属
   nonferrous:
     - code: "CU"
       name: "铜"
       exchange: "SHFE"
-      related_policies: ["发改委", "工信部", "商务部", "海关总署"]
-      alpha_pai_keywords: ["铜", "铜矿", "冶炼", "新能源铜", "LME铜"]
     - code: "AL"
       name: "铝"
       exchange: "SHFE"
-      related_policies: ["发改委", "工信部", "生态环境部"]
-      alpha_pai_keywords: ["铝", "电解铝", "氧化铝", "云南", "产能置换"]
+    - code: "ZN"
+      name: "锌"
+      exchange: "SHFE"
     - code: "NI"
       name: "镍"
       exchange: "SHFE"
-      related_policies: ["发改委", "工信部", "商务部"]
-      alpha_pai_keywords: ["镍", "镍矿", "不锈钢", "镍铁", "印尼镍"]
-  
+    - code: "SN"
+      name: "锡"
+      exchange: "SHFE"
+    - code: "PB"
+      name: "铅"
+      exchange: "SHFE"
+    - code: "AO"
+      name: "氧化铝"
+      exchange: "SHFE"
+    - code: "SS"
+      name: "不锈钢"
+      exchange: "SHFE"
+    - code: "BC"
+      name: "国际铜"
+      exchange: "INE"
   # 贵金属
   precious:
     - code: "AU"
       name: "黄金"
       exchange: "SHFE"
-      related_policies: ["央行", "外汇管理局"]
-      alpha_pai_keywords: ["黄金", "美联储", "实际利率", "央行购金"]
     - code: "AG"
       name: "白银"
       exchange: "SHFE"
-      related_policies: ["央行", "工信部"]
-      alpha_pai_keywords: ["白银", "光伏银浆", "工业银"]
-
+  # 能源化工
+  energy_chemical:
+    - code: "SC"
+      name: "原油"
+      exchange: "INE"
+    - code: "BU"
+      name: "沥青"
+      exchange: "SHFE"
+    - code: "RU"
+      name: "天然橡胶"
+      exchange: "SHFE"
+    - code: "NR"
+      name: "20号胶"
+      exchange: "INE"
+    - code: "BR"
+      name: "丁二烯橡胶"
+      exchange: "SHFE"
+    - code: "LU"
+      name: "低硫燃料油"
+      exchange: "INE"
+    - code: "TA"
+      name: "PTA"
+      exchange: "ZCE"
+    - code: "MA"
+      name: "甲醇"
+      exchange: "ZCE"
+    - code: "L"
+      name: "聚乙烯"
+      exchange: "DCE"
+    - code: "PP"
+      name: "聚丙烯"
+      exchange: "DCE"
+    - code: "V"
+      name: "PVC"
+      exchange: "DCE"
+    - code: "EG"
+      name: "乙二醇"
+      exchange: "DCE"
+    - code: "EB"
+      name: "苯乙烯"
+      exchange: "DCE"
+    - code: "FG"
+      name: "玻璃"
+      exchange: "ZCE"
+    - code: "SA"
+      name: "纯碱"
+      exchange: "ZCE"
+    - code: "UR"
+      name: "尿素"
+      exchange: "ZCE"
+    - code: "SH"
+      name: "烧碱"
+      exchange: "ZCE"
+    - code: "PX"
+      name: "对二甲苯"
+      exchange: "ZCE"
+    - code: "PF"
+      name: "短纤"
+      exchange: "ZCE"
+    - code: "PG"
+      name: "液化石油气"
+      exchange: "DCE"
+    - code: "SP"
+      name: "纸浆"
+      exchange: "SHFE"
+  # 农产品
+  agriculture:
+    - code: "M"
+      name: "豆粕"
+      exchange: "DCE"
+    - code: "C"
+      name: "玉米"
+      exchange: "DCE"
+    - code: "CS"
+      name: "玉米淀粉"
+      exchange: "DCE"
+    - code: "CF"
+      name: "棉花"
+      exchange: "ZCE"
+    - code: "P"
+      name: "棕榈油"
+      exchange: "DCE"
+    - code: "Y"
+      name: "豆油"
+      exchange: "DCE"
+    - code: "OI"
+      name: "菜油"
+      exchange: "ZCE"
+    - code: "RM"
+      name: "菜粕"
+      exchange: "ZCE"
+    - code: "SR"
+      name: "白糖"
+      exchange: "ZCE"
+    - code: "JD"
+      name: "鸡蛋"
+      exchange: "DCE"
+    - code: "AP"
+      name: "苹果"
+      exchange: "ZCE"
+    - code: "LH"
+      name: "生猪"
+      exchange: "DCE"
+    - code: "PK"
+      name: "花生"
+      exchange: "ZCE"
+    - code: "CJ"
+      name: "红枣"
+      exchange: "ZCE"
+  # 铁合金
+  ferroalloy:
+    - code: "SM"
+      name: "锰硅"
+      exchange: "ZCE"
+    - code: "SF"
+      name: "硅铁"
+      exchange: "ZCE"
+  # 新能源
+  new_energy:
+    - code: "SI"
+      name: "工业硅"
+      exchange: "GFEX"
+    - code: "LC"
+      name: "碳酸锂"
+      exchange: "GFEX"
 # 政策数据源配置
 policy_sources:
   # 国务院
@@ -180,7 +264,7 @@ intraday:
   review_time: "19:00"          # 复盘时间
   min_confidence: 7             # 最低置信度（0-10）
   max_trades_per_day: 3         # 每日最大交易次数
-  default_focus: ["RB", "M", "CU", "I", "SC", "AL", "AU"]  # 默认扫描品种
+  default_focus: ['AG', 'AL', 'AO', 'AP', 'AU', 'BC', 'BR', 'BU', 'C', 'CF', 'CJ', 'CS', 'CU', 'EB', 'EG', 'FG', 'HC', 'I', 'J', 'JD', 'JM', 'L', 'LC', 'LH', 'LU', 'M', 'MA', 'NI', 'NR', 'OI', 'P', 'PB', 'PF', 'PG', 'PK', 'PP', 'PX', 'RB', 'RM', 'RU', 'SA', 'SC', 'SF', 'SH', 'SI', 'SM', 'SN', 'SP', 'SR', 'SS', 'TA', 'UR', 'V', 'Y', 'ZN']  # 默认扫描品种
   trading_days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
 
 # 行情数据源
@@ -188,6 +272,25 @@ market_data:
   source: "sina"
   base_url: "http://hq.sinajs.cn/list={code}"
   encoding: "gbk"
+
+# 分钟线数据配置 (AKShare)
+minute_data:
+  source: "akshare"
+  period: "1"                      # 1分钟线
+  entry_time: "09:05"
+  exit_time: "14:55"
+  day_session_start: "09:00"
+  day_session_end: "15:00"
+  # 品种代码映射: 系统代码 -> AKShare symbol
+  # 默认规则为 commodity + '0'，如有特殊映射可在此覆盖
+  symbol_map:
+    RB: "RB0"
+    SC: "SC0"
+    M: "M0"
+    CU: "CU0"
+    I: "I0"
+    AL: "AL0"
+    AU: "AU0"
 
 # 报告配置
 reporting:

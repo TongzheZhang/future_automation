@@ -78,7 +78,7 @@ def test_intraday_trade_calculate_pnl():
         actual_exit=3250,
     )
     t1.calculate_pnl()
-    assert t1.pnl == 50.0
+    assert t1.pnl == 500.0   # RB 合约乘数 10，(3250-3200)*10
     assert t1.status == TradeStatus.WIN
     
     t2 = IntradayTrade(
@@ -89,7 +89,7 @@ def test_intraday_trade_calculate_pnl():
         actual_exit=3050,
     )
     t2.calculate_pnl()
-    assert t2.pnl == -50.0
+    assert t2.pnl == -500.0  # M 合约乘数 10，(3000-3050)*10
     assert t2.status == TradeStatus.LOSS
 
 
@@ -119,7 +119,7 @@ def test_record_roundtrip():
     save_trades(date_str, trades)
     loaded_trades = load_trades(date_str)
     assert len(loaded_trades) == 1
-    assert loaded_trades[0].pnl == 50.0
+    assert loaded_trades[0].pnl == 500.0
     
     # 复盘
     review = DailyReview(
@@ -133,7 +133,7 @@ def test_record_roundtrip():
     assert loaded_review is not None
     assert loaded_review.trade_count == 1
     assert loaded_review.accuracy == 100.0
-    assert loaded_review.total_pnl == 50.0
+    assert loaded_review.total_pnl == 500.0
 
 
 def test_daily_review_stats():

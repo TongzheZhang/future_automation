@@ -54,7 +54,12 @@ def load_signals(date: str) -> List[IntradaySignal]:
 def save_trades(date: str, trades: List[IntradayTrade]):
     """保存当日交易记录"""
     path = _trade_path(date)
-    data = [t.model_dump(mode="json") for t in trades]
+    data = []
+    for t in trades:
+        d = t.model_dump(mode="json")
+        d["entry_time"] = f"{t.date} 09:05:00"
+        d["exit_time"] = t.closed_at.strftime("%Y-%m-%d %H:%M:%S") if t.closed_at else f"{t.date} 14:55:00"
+        data.append(d)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     logger.info(f"交易记录已保存: {path}")

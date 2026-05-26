@@ -11,44 +11,67 @@ from datetime import datetime
 from data.collectors.brave_search import BraveSearchCollector
 from data.collectors.market_data import MarketDataCollector, MarketSnapshot
 from research.llm_integration import LLMClient, extract_json_from_text
-from intraday.models import IntradaySignal, Direction, MarketSnapshotData
+from intraday.models import IntradaySignal, Direction, MarketSnapshotData, CONTRACT_SIZE
 
 logger = logging.getLogger(__name__)
 
-# 品种每手吨数（简化，实际交易中应精确）
-CONTRACT_SIZE = {
-    "RB": 10,
-    "I": 100,
-    "J": 100,
-    "M": 10,
-    "CU": 5,
-    "AL": 5,
-    "SC": 1000,
-    "TA": 5,
-    "MA": 10,
-    "C": 10,
-    "CF": 5,
-    "P": 10,
-    "AU": 1000,
-    "AG": 15,
-}
-
 # 品种最小变动价位对应的每手价值（简化）
 TICK_VALUE = {
-    "RB": 10,
-    "I": 50,
-    "J": 50,
-    "M": 10,
-    "CU": 50,
+    "AG": 15,
     "AL": 25,
-    "SC": 100,
-    "TA": 5,
-    "MA": 10,
+    "AO": 20,
+    "AP": 10,
+    "AU": 1000,
+    "BC": 50,
+    "BR": 25,
+    "BU": 10,
     "C": 10,
     "CF": 25,
+    "CJ": 5,
+    "CS": 10,
+    "CU": 50,
+    "EB": 5,
+    "EG": 10,
+    "FG": 20,
+    "HC": 10,
+    "I": 50,
+    "J": 50,
+    "JD": 10,
+    "JM": 30,
+    "L": 5,
+    "LC": 1,
+    "LH": 16,
+    "LU": 10,
+    "M": 10,
+    "MA": 10,
+    "NI": 10,
+    "NR": 50,
+    "OI": 10,
     "P": 10,
-    "AU": 1000,
-    "AG": 15,
+    "PB": 25,
+    "PF": 5,
+    "PG": 20,
+    "PK": 5,
+    "PP": 5,
+    "PX": 5,
+    "RB": 10,
+    "RM": 10,
+    "RU": 50,
+    "SA": 20,
+    "SC": 100,
+    "SF": 5,
+    "SH": 30,
+    "SI": 5,
+    "SM": 5,
+    "SN": 10,
+    "SP": 10,
+    "SR": 10,
+    "SS": 25,
+    "TA": 5,
+    "UR": 20,
+    "V": 5,
+    "Y": 10,
+    "ZN": 25,
 }
 
 
@@ -72,7 +95,7 @@ class IntradayStrategy:
         date_str = datetime.now().strftime("%Y-%m-%d")
         
         # 1. 获取开盘行情
-        snapshot = self.market.get_snapshot(commodity)
+        snapshot = await self.market.async_get_snapshot(commodity)
         if not snapshot:
             logger.error(f"无法获取行情 {commodity}")
             return IntradaySignal(date=date_str, commodity=commodity, commodity_name=name)
@@ -101,6 +124,7 @@ class IntradayStrategy:
             low=snapshot.low,
             last=snapshot.last,
             prev_settle=snapshot.prev_settle,
+            settle=snapshot.settle,
             bid=snapshot.bid,
             ask=snapshot.ask,
             open_interest=snapshot.open_interest,
@@ -169,23 +193,37 @@ class IntradayStrategy:
         date_str = datetime.now().strftime("%Y-%m-%d")
         tick_value = TICK_VALUE.get(commodity, 10)
         
-        system_prompt = """你是一个只做日内T+0的期货交易员，每天只做1-2笔高确定性交易，14:55必须平仓。
+        system_prompt = """你是一个只做日内T+0的期货交易员，交易时间严格限制在日盘 09:00-15:00。
+每天只做1-2笔高确定性交易，14:55前必须平仓，不持仓过夜，不交易夜盘。
 你的风格是：客观、冷静、只看高确定性机会，没有把握就观望。
 输出必须是 JSON 格式。"""
         
+        # 量仓变化提示（只有当前快照，无历史对比，引导 LLM 做定性判断）
+        oi_hint = "增仓" if snapshot.open_interest > 0 else "持仓数据缺失"
+        vol_hint = "有成交" if snapshot.volume > 0 else "成交清淡"
+
         user_prompt = f"""品种: {name} ({commodity})
 日期: {date_str}
 
 【开盘行情】
 - 昨结: {snapshot.prev_settle}
-- 开盘: {snapshot.open}
-- 最新: {snapshot.last}
+- 开盘价: {snapshot.open}（集合竞价产生，代表隔夜情绪）
+- 09:05最新价: {snapshot.last}（开盘扫描时的实时成交价格，作为入场基准）
 - 最高: {snapshot.high}
 - 最低: {snapshot.low}
 - 跳空幅度: {snapshot.gap_pct}%
-- 涨跌幅: {snapshot.change_pct}%
+- 涨跌幅(基于昨结): {snapshot.change_pct}%
 - 持仓量: {snapshot.open_interest:,.0f}
 - 成交量: {snapshot.volume:,.0f}
+
+【量仓变化分析】
+- 当前持仓状态: {oi_hint}
+- 当前成交状态: {vol_hint}
+- 请结合价格方向与量仓关系判断资金主动流入还是流出：
+  * 价涨 + 持仓增 + 成交放 = 多头主动开仓，趋势较强
+  * 价涨 + 持仓减 + 成交缩 = 空头回补，反弹持续性存疑
+  * 价跌 + 持仓增 + 成交放 = 空头主动开仓，下行有动能
+  * 价跌 + 持仓减 + 成交缩 = 多头离场，弱势整理
 
 【隔夜新闻】
 {overnight_news}
@@ -198,12 +236,13 @@ class IntradayStrategy:
 - 只做1个方向，不双向交易
 - 14:55前必须平仓
 - 止损严格，单笔亏损控制在合理范围
+- 建议入场价应参考日内实时价，而非直接以开盘价成交
 
 请判断并输出 JSON：
 {{
     "should_trade": true/false,
     "direction": "LONG/SHORT/NO_TRADE",
-    "entry_price": 建议入场价（数字）,
+    "entry_price": 建议入场价（数字，参考日内实时价）,
     "stop_loss_price": 止损价（数字）,
     "target_price": 目标价（数字）,
     "confidence": 0-10 的整数,
@@ -213,8 +252,9 @@ class IntradayStrategy:
 
 判断原则：
 - 跳空>2%时，追高风险大，偏向观望或做回补
-- 增仓上行=多头主动，减仓上行=空头回补
+- 增仓上行=多头主动，减仓上行=空头回补；务必结合量仓变化判断
 - 隔夜重大利空/利多+跳空确认 = 高确定性顺势交易
+- 开盘价与日内实时价背离时，以实时价方向为准
 - 没有明确催化剂时，建议观望
 """
         

@@ -62,7 +62,7 @@ async def run_evening_review(date: str = None):
         f"- 总盈亏: {review.total_pnl:+.2f}",
         f"- 平均盈亏: {review.avg_pnl:+.2f}",
         "",
-        "## 交易明细",
+        "## 交易明细 (时间窗口: 09:05 → 14:55, 数据源: AKShare 1分钟线)",
         "",
     ]
     
@@ -70,7 +70,7 @@ async def run_evening_review(date: str = None):
         emoji = "🟢" if t.status == TradeStatus.WIN else "🔴" if t.status == TradeStatus.LOSS else "⚪"
         report_lines.append(f"{emoji} **{t.commodity}** {t.direction.value}")
         report_lines.append(f"  信号: 入场{t.signal_entry} 止损{t.signal_stop} 目标{t.signal_target}")
-        report_lines.append(f"  实际: 入场{t.actual_entry} → 平仓{t.actual_exit}")
+        report_lines.append(f"  实际: 09:05 入场{t.actual_entry} → 14:55 平仓{t.actual_exit}")
         report_lines.append(f"  盈亏: {t.pnl:+} | 回撤: {t.max_drawdown}")
         report_lines.append(f"  逻辑: {t.core_logic}")
         if t.review_notes:
@@ -124,15 +124,19 @@ async def _llm_review(trades, signals) -> str:
             f"逻辑: {t.core_logic}"
         )
     
-    prompt = f"""你是一位期货交易复盘专家。请对以下日内交易进行复盘分析：
+    prompt = f"""你是一位期货交易复盘专家。请对以下日内交易进行复盘分析。
+
+【重要说明】
+- 本策略只做日盘交易，时间窗口严格为 09:05 开仓 → 14:55 平仓，不过夜、不碰夜盘。
+- 以下 "日内最高/最低" 数据来自 AKShare 1分钟线，已过滤为纯日盘(09:05-14:55)数据。
 
 【当日交易记录】
 {chr(10).join(trade_descriptions)}
 
 请分析：
-1. 本次判断的主要偏差在哪里？（开盘判断 vs 实际走势）
+1. 本次判断的主要偏差在哪里？（09:05开盘判断 vs 09:05→14:55实际走势）
 2. 止损和目标设置是否合理？
-3. 有没有更好的入场或出场时机？
+3. 有没有更好的入场或出场时机？（但必须在14:55前平仓）
 4. 下次类似情况应如何改进？
 5. 用简洁的语言总结今日得失。
 
@@ -140,6 +144,7 @@ async def _llm_review(trades, signals) -> str:
 - 客观、具体，不要泛泛而谈
 - 指出具体的判断失误或成功之处
 - 给出可操作的改进建议
+- 请严格基于 09:05→14:55 的日盘时间窗口进行分析
 """
     
     client = LLMClient()

@@ -23,6 +23,66 @@ class TradeStatus(str, Enum):
     PENDING = "PENDING"
 
 
+# 品种每手合约乘数（吨/手），用于盈亏计算
+CONTRACT_SIZE: Dict[str, int] = {
+    "AG": 15,
+    "AL": 5,
+    "AO": 20,
+    "AP": 10,
+    "AU": 1000,
+    "BC": 5,
+    "BR": 5,
+    "BU": 10,
+    "C": 10,
+    "CF": 5,
+    "CJ": 5,
+    "CS": 10,
+    "CU": 5,
+    "EB": 5,
+    "EG": 10,
+    "FG": 20,
+    "HC": 10,
+    "I": 100,
+    "J": 100,
+    "JD": 10,
+    "JM": 60,
+    "L": 5,
+    "LC": 1,
+    "LH": 16,
+    "LU": 10,
+    "M": 10,
+    "MA": 10,
+    "NI": 1,
+    "NR": 10,
+    "OI": 10,
+    "P": 10,
+    "PB": 5,
+    "PF": 5,
+    "PG": 20,
+    "PK": 5,
+    "PP": 5,
+    "PX": 5,
+    "RB": 10,
+    "RM": 10,
+    "RU": 10,
+    "SA": 20,
+    "SC": 1000,
+    "SF": 5,
+    "SH": 30,
+    "SI": 5,
+    "SM": 5,
+    "SN": 1,
+    "SP": 10,
+    "SR": 10,
+    "SS": 5,
+    "TA": 5,
+    "UR": 20,
+    "V": 5,
+    "Y": 10,
+    "ZN": 5,
+}
+
+
 class MarketSnapshotData(BaseModel):
     """开盘行情快照（简化版，用于序列化）"""
     commodity: str = ""
@@ -33,6 +93,7 @@ class MarketSnapshotData(BaseModel):
     low: float = 0.0
     last: float = 0.0
     prev_settle: float = 0.0
+    settle: float = 0.0          # 当日结算价（盘中可能为0，盘后更新）
     bid: float = 0.0
     ask: float = 0.0
     open_interest: float = 0.0
@@ -102,12 +163,15 @@ class IntradayTrade(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     closed_at: Optional[datetime] = None
     
-    def calculate_pnl(self, point_value: float = 1.0) -> float:
-        """计算盈亏（简化，不考虑手续费）"""
+    def calculate_pnl(self, contract_size: Optional[float] = None) -> float:
+        """计算盈亏（元），按合约乘数*价格差，不考虑手续费"""
+        if contract_size is None:
+            contract_size = CONTRACT_SIZE.get(self.commodity, 1)
+
         if self.direction == Direction.LONG:
-            self.pnl = round((self.actual_exit - self.actual_entry) * point_value, 2)
+            self.pnl = round((self.actual_exit - self.actual_entry) * contract_size, 2)
         elif self.direction == Direction.SHORT:
-            self.pnl = round((self.actual_entry - self.actual_exit) * point_value, 2)
+            self.pnl = round((self.actual_entry - self.actual_exit) * contract_size, 2)
         else:
             self.pnl = 0.0
         
