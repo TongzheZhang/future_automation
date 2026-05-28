@@ -80,25 +80,30 @@ class MinuteDataCollector:
         logger.error(f"拉取分钟线最终失败 {ak_symbol}")
         return None
 
-    def _get_data(self, commodity: str) -> Optional[pd.DataFrame]:
-        """获取品种分钟线（优先缓存，仅保留当天数据）"""
+    def _get_data(self, commodity: str, date: str = None) -> Optional[pd.DataFrame]:
+        """获取品种分钟线（优先缓存，仅保留指定日期数据）
+        
+        Args:
+            commodity: 品种代码
+            date: 指定日期 YYYY-MM-DD，默认今天
+        """
         ak_symbol = self._to_ak_symbol(commodity)
         if not ak_symbol:
             return None
 
-        key = self._cache_key(ak_symbol)
+        target_date = date or datetime.now().strftime("%Y-%m-%d")
+        key = f"{self._cache_key(ak_symbol)}_{target_date}"
         if key in self._cache:
             return self._cache[key]
 
         df = self._fetch_minute_data(ak_symbol)
         if df is not None and not df.empty:
-            # AKShare 返回多交易日数据，仅保留当前自然日
-            today = datetime.now().strftime("%Y-%m-%d")
-            df = df[df["datetime"].astype(str).str.startswith(today)]
+            # AKShare 返回多交易日数据，仅保留指定日期
+            df = df[df["datetime"].astype(str).str.startswith(target_date)]
             if not df.empty:
                 self._cache[key] = df
                 return df
-            logger.warning(f"{commodity} 分钟线无当日({today})数据")
+            logger.warning(f"{commodity} 分钟线无 {target_date} 数据")
             return None
         return None
 

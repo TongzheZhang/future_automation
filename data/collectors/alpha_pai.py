@@ -258,18 +258,20 @@ class AlphaPaiCollector:
         doc_types: Optional[List[str]] = None,
         start_date: Optional[str] = None,
         days_back: int = 30,
+        max_docs: Optional[int] = None,
+        max_chars_per_doc: Optional[int] = None,
     ) -> str:
         """
-        通过 recall 获取品种基本面原始数据，整理为文本摘要
-        建议使用 recall（省积分），不经过大模型加工，直接返回原始数据
+        通过 recall 获取品种基本面原始数据，完整返回原始内容。
+        默认不截断；如需控制长度，请在调用方通过 max_docs / max_chars_per_doc 指定。
         """
         if doc_types is None:
             doc_types = ["report", "roadShow", "comment", "ann"]
-        
+
         if not start_date:
             from datetime import datetime, timedelta
             start_date = (datetime.now() - timedelta(days=days_back)).strftime("%Y-%m-%d")
-        
+
         query = " ".join(keywords[:3])
         try:
             result = self.recall(
@@ -277,22 +279,26 @@ class AlphaPaiCollector:
                 doc_types=doc_types,
                 start_date=start_date,
             )
-            
+
             if not result.documents:
                 return "暂无相关数据"
-            
+
             lines = []
-            for i, doc in enumerate(result.documents[:5], 1):
+            for i, doc in enumerate(result.documents, 1):
+                if max_docs is not None and i > max_docs:
+                    break
                 title = doc.get("title", "")
-                content = doc.get("content", "")[:200]
+                content = doc.get("content", "")
+                if max_chars_per_doc is not None:
+                    content = content[:max_chars_per_doc]
                 doc_type = doc.get("recallType", "")
                 pub_date = doc.get("publishDate", "")
                 lines.append(f"[{i}] [{doc_type}] {title} ({pub_date})")
                 if content:
                     lines.append(f"    {content}")
-            
+
             return "\n".join(lines)
-        
+
         except Exception as e:
             logger.error(f"Alpha 派基本面数据获取失败: {e}")
             return "数据获取失败"

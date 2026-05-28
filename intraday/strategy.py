@@ -11,6 +11,7 @@ from datetime import datetime
 from data.collectors.brave_search import BraveSearchCollector
 from data.collectors.market_data import MarketDataCollector, MarketSnapshot
 from data.collectors.alpha_pai import AlphaPaiCollector
+from data.collectors.alpha_pai_research import AlphaPaiResearchAdvisor
 from research.llm_integration import LLMClient, extract_json_from_text
 from intraday.models import IntradaySignal, Direction, MarketSnapshotData, CONTRACT_SIZE
 from intraday.evolution import get_evolved_system_prompt, get_current_confidence_threshold, get_cognition_prompt_additions
@@ -96,6 +97,11 @@ class IntradayStrategy:
         self.market = MarketDataCollector()
         self.alpha_pai = AlphaPaiCollector()
         self.llm: Optional[LLMClient] = None
+        self._premarket_briefing: str = ""  # Alpha派 盘前顾问简报
+    
+    def set_premarket_briefing(self, briefing: str):
+        """设置盘前 Alpha派 顾问简报，将拼接到 LLM system prompt"""
+        self._premarket_briefing = briefing
     
     async def _get_llm(self) -> LLMClient:
         if self.llm is None:
@@ -312,6 +318,10 @@ class IntradayStrategy:
         cognition_additions = get_cognition_prompt_additions()
         system_prompt = get_evolved_system_prompt(base_prompt, cognition_additions)
         
+        # 融入 Alpha派 盘前顾问简报
+        if self._premarket_briefing:
+            system_prompt += f"\n\n【Alpha派 投研顾问盘前简报】\n{self._premarket_briefing}"
+        
         # 量仓变化提示（只有当前快照，无历史对比，引导 LLM 做定性判断）
         oi_hint = "增仓" if snapshot.open_interest > 0 else "持仓数据缺失"
         vol_hint = "有成交" if snapshot.volume > 0 else "成交清淡"
@@ -429,7 +439,7 @@ class IntradayStrategy:
         min_confidence: int = None,
     ) -> List[IntradaySignal]:
         """
-        扫描所有品种，返回高置信度信号（支持动态阈值调整）
+        扫描所有品种，返回高置信度信号（支持动态阈值调整 + Alpha派验证）
         commodities: [{"code": "RB", "name": "螺纹钢"}, ...]
         """
         # 动态调整置信度阈值
@@ -447,6 +457,37 @@ class IntradayStrategy:
         
         # 过滤 + 排序
         valid = [s for s in signals if s.should_trade(min_confidence=min_confidence)]
+        valid.sort(key=lambda x: x.confidence, reverse=True)
+        
+        # Alpha派 专家验证：对高置信度信号（≥8）进行独立验证
+        advisor = AlphaPaiResearchAdvisor()
+        for sig in valid:
+            if sig.confidence >= 8:
+                try:
+                    validation = await advisor.validate_signal(
+                        commodity=sig.commodity,
+                        direction=sig.direction.value,
+                        entry_price=sig.entry_price,
+                        stop_loss=sig.stop_loss_price,
+                        target=sig.target_price,
+                        core_logic=sig.core_logic,
+                        confidence=sig.confidence,
+                    )
+                    if validation.verdict == "质疑":
+                        old_conf = sig.confidence
+                        sig.confidence = max(0, min(10, sig.confidence + validation.confidence_adjustment))
+                        logger.warning(
+                            f"Alpha派质疑 {sig.commodity} 信号: {validation.risk_reminders} | "
+                            f"置信度 {old_conf} -> {sig.confidence}"
+                        )
+                    elif validation.verdict == "赞同":
+                        logger.info(f"Alpha派赞同 {sig.commodity} 信号")
+                    else:
+                        logger.info(f"Alpha派补充 {sig.commodity} 信号: {validation.risk_reminders}")
+                except Exception as e:
+                    logger.error(f"Alpha派信号验证失败 {sig.commodity}: {e}")
+        
+        # 重新排序（验证后置信度可能变化）
         valid.sort(key=lambda x: x.confidence, reverse=True)
         
         # 最多返回前3个

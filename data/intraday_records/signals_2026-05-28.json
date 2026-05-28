@@ -1,0 +1,34 @@
+[
+  {
+    "date": "2026-05-28",
+    "commodity": "AG",
+    "commodity_name": "白银",
+    "direction": "SHORT",
+    "entry_price": 18096.0,
+    "confidence": 8,
+    "stop_loss_price": 18280.0,
+    "target_price": 17681.0,
+    "core_logic": "跳空幅度大+隔夜利空+增仓下行=空头主动开仓",
+    "overnight_news": "Silver Futures Price Today - Investing.com: Explore real-time Silver Futures price data and key metrics crucial for understa\n黄金价格走势图- 即时黄金,白银,铂金和钯金现货价格: Gold prices updated in real-time. Track the gold spot price in GBP, USD, EUR, JP\n技术面风险不断积聚，金价或下探至3800美元？分析师这么解释……: 对于白银，Gilburt的看法与黄金类似。只要价格低于3月份的近阶段高点，他就认为白银存在下行风险，可能跌至53.50美元/盎司的水平。",
+    "market_snapshot": {
+      "commodity": "AG",
+      "name": "白银连续",
+      "time": "105600",
+      "open": 18080.0,
+      "high": 18280.0,
+      "low": 17681.0,
+      "last": 18096.0,
+      "prev_settle": 18591.0,
+      "settle": 0.0,
+      "bid": 17716.0,
+      "ask": 17717.0,
+      "open_interest": 275443.0,
+      "volume": 676175.0,
+      "date": "2026-05-28",
+      "gap_pct": -2.75,
+      "change_pct": -100.0,
+      "amplitude_pct": 3.22
+    },
+    "generated_at": "2026-05-28T10:56:05.856449"
+  }
+]

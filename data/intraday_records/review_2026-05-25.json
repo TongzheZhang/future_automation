@@ -31,7 +31,7 @@
         "change_pct": 0.0,
         "amplitude_pct": 0.0
       },
-      "generated_at": "2026-05-28T09:41:49.905867"
+      "generated_at": "2026-05-28T14:48:07.004569"
     },
     {
       "date": "2026-05-25",
@@ -63,7 +63,7 @@
         "change_pct": 0.0,
         "amplitude_pct": 0.0
       },
-      "generated_at": "2026-05-28T09:41:49.905870"
+      "generated_at": "2026-05-28T14:48:07.004571"
     }
   ],
   "trades": [
@@ -86,7 +86,7 @@
       "status": "WIN",
       "review_notes": "",
       "lessons": [],
-      "created_at": "2026-05-28T09:41:49.906044",
+      "created_at": "2026-05-28T14:48:07.004757",
       "closed_at": null
     }
   ],
@@ -102,5 +102,5 @@
   "strategy_adjustments": [],
   "extracted_cognitions": [],
   "evolution_report": "",
-  "generated_at": "2026-05-28T09:41:49.906135"
+  "generated_at": "2026-05-28T14:48:07.004853"
 }

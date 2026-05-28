@@ -107,7 +107,13 @@ class TestEvolutionE2E:
         assert len(loaded.items) == 2
         assert loaded.items[0].category == "signal_filter"
         
-        # 5. 验证 prompt 追加文本
+        # 5. 验证 prompt 追加文本（要求普适性，测试数据需满足条件）
+        # 手动设置普适性条件使认知能进入 prompt
+        for item in loaded.items:
+            item.cross_commodity_count = max(3, item.cross_commodity_count)
+            item.cross_date_count = max(3, item.cross_date_count)
+            item.uniqueness_score = min(5, item.uniqueness_score)
+        loaded.evolved_prompt_additions = loaded.rebuild_prompt_additions()
         prompt_additions = loaded.evolved_prompt_additions
         assert "系统进化经验规则" in prompt_additions
         assert "跳空>1.5%" in prompt_additions

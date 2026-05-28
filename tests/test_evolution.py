@@ -108,8 +108,8 @@ class TestCognitionLibrary:
 
     def test_rebuild_prompt_additions(self):
         lib = CognitionLibrary(items=[
-            CognitionItem(id="1", lesson="规则A", category="signal_filter", confidence=8),
-            CognitionItem(id="2", lesson="规则B", category="entry_timing", confidence=9),
+            CognitionItem(id="1", lesson="规则A", category="signal_filter", confidence=8, cross_commodity_count=3, cross_date_count=3, uniqueness_score=3),
+            CognitionItem(id="2", lesson="规则B", category="entry_timing", confidence=9, cross_commodity_count=5, cross_date_count=4, uniqueness_score=2),
         ])
         text = lib.rebuild_prompt_additions()
         assert "系统进化经验规则" in text

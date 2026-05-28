@@ -166,7 +166,7 @@ class DailyResearchPipeline:
                             fundamental_input["indicators"][indicator_name] = indicator_data.description
                     
                     if alpha_pai_research:
-                        fundamental_input["alpha_pai_summary"] = alpha_pai_research[:1000]
+                        fundamental_input["alpha_pai_summary"] = alpha_pai_research
                     
                     fundamental = await self.fundamental_analyzer.deep_analyze_with_llm(
                         commodity=comm_name,

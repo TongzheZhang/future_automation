@@ -140,15 +140,14 @@ async def extract_cognitions_from_review(review: DailyReview) -> List[CognitionI
 def merge_cognitions(library: CognitionLibrary, new_cogs: List[CognitionItem]) -> CognitionLibrary:
     """
     将新认知融合到认知库
-    - 相似认知合并（更新可靠度）
+    - 相似认知合并（更新可靠度、跨品种计数、跨日期计数）
     - 全新认知追加
     - 矛盾认知标记
     """
     for new_cog in new_cogs:
-        # 查找相似认知（基于 lesson 文本相似度，简化处理：判断是否包含相同关键词）
+        # 查找相似认知（基于 lesson 文本相似度）
         merged = False
         for existing in library.items:
-            # 简单相似判断：如果 lesson 的前20个字符相同，认为是同一认知
             if new_cog.lesson[:30] == existing.lesson[:30] or new_cog.lesson in existing.lesson or existing.lesson in new_cog.lesson:
                 # 合并：取更高可靠度，累加验证次数
                 existing.confidence = max(existing.confidence, new_cog.confidence)
@@ -156,18 +155,35 @@ def merge_cognitions(library: CognitionLibrary, new_cogs: List[CognitionItem]) -
                 existing.win_count += new_cog.win_count
                 existing.loss_count += new_cog.loss_count
                 existing.source_trade_date = new_cog.source_trade_date
+                
+                # 更新跨品种/跨日期计数（防过拟合关键）
+                existing.cross_commodity_count = max(
+                    existing.cross_commodity_count,
+                    len(set(existing.affected_commodities + new_cog.affected_commodities))
+                )
+                existing.cross_date_count += 1
+                existing.uniqueness_score = min(
+                    existing.uniqueness_score,
+                    new_cog.uniqueness_score
+                )
+                
+                # 合并 affected_commodities
+                existing.affected_commodities = list(set(
+                    existing.affected_commodities + new_cog.affected_commodities
+                ))
+                
                 merged = True
-                logger.info(f"认知合并: {existing.lesson[:40]}... (验证次数+{new_cog.verification_count})")
+                logger.info(f"认知合并: {existing.lesson[:40]}... (验证次数+{new_cog.verification_count}, 跨品种:{existing.cross_commodity_count}, 跨日期:{existing.cross_date_count})")
                 break
         
         if not merged:
             library.items.append(new_cog)
-            logger.info(f"新增认知: {new_cog.lesson[:40]}...")
+            logger.info(f"新增认知: {new_cog.lesson[:40]}... (来源:{new_cog.source_type})")
     
     # 按可靠度排序
     library.items.sort(key=lambda x: (x.confidence, x.verification_count), reverse=True)
     
-    # 重新构建 prompt 追加文本
+    # 重新构建 prompt 追加文本（只使用具备普适性的认知）
     library.evolved_prompt_additions = library.rebuild_prompt_additions()
     
     return library
@@ -273,9 +289,36 @@ async def update_framework_with_cognitions(library: CognitionLibrary, framework_
     logger.info(f"框架文档已更新: {framework_path}")
 
 
-async def run_evolution(review: DailyReview) -> str:
+async def extract_cognitions_from_market_scan(market_scan) -> List[CognitionItem]:
     """
-    执行完整的进化流程
+    从市场扫描报告中提取普适性 lessons
+    """
+    if not market_scan or not market_scan.extracted_lessons:
+        return []
+    
+    cognitions = []
+    for i, lesson in enumerate(market_scan.extracted_lessons):
+        cog = CognitionItem(
+            id=f"MKT-{datetime.now().strftime('%Y%m%d')}-{len(cognitions)+1:02d}",
+            lesson=lesson.get("lesson", ""),
+            category=lesson.get("category", "general"),
+            confidence=min(10, max(0, int(lesson.get("universality_score", 5)))),
+            source_type="market_observation",
+            cross_commodity_count=len(lesson.get("commodities", [])),
+            cross_date_count=1,
+            uniqueness_score=10 - min(10, max(0, int(lesson.get("universality_score", 5)))),
+            affected_commodities=lesson.get("commodities", []),
+            source_trade_date=market_scan.date,
+        )
+        cognitions.append(cog)
+    
+    logger.info(f"从市场扫描提取了 {len(cognitions)} 条认知")
+    return cognitions
+
+
+async def run_evolution(review: DailyReview, market_scan=None) -> str:
+    """
+    执行完整的进化流程（支持从自己交易 + 市场观察中提取）
     返回进化报告文本
     """
     logger.info("=" * 60)
@@ -285,34 +328,47 @@ async def run_evolution(review: DailyReview) -> str:
     # 1. 加载认知库
     library = load_cognition_library()
     
-    # 2. 提取新认知
-    new_cogs = await extract_cognitions_from_review(review)
-    review.extracted_cognitions = new_cogs
+    # 2. 从自己交易中提取认知
+    trade_cogs = await extract_cognitions_from_review(review)
+    review.extracted_cognitions = trade_cogs
     
-    # 3. 融合认知
-    if new_cogs:
-        library = merge_cognitions(library, new_cogs)
+    # 3. 从市场扫描中提取认知
+    market_cogs = await extract_cognitions_from_market_scan(market_scan)
+    
+    # 4. 融合所有认知
+    all_new_cogs = trade_cogs + market_cogs
+    if all_new_cogs:
+        library = merge_cognitions(library, all_new_cogs)
         save_cognition_library(library)
     
-    # 4. 更新框架文档
+    # 5. 更新框架文档
     await update_framework_with_cognitions(library)
     
-    # 5. 生成进化报告
+    # 6. 生成进化报告
     report_lines = [
         f"# 策略进化报告 ({review.date})",
         "",
         f"- 认知库总条目: {len(library.items)}",
-        f"- 本次新增/更新: {len(new_cogs)}",
-        f"- 已验证高可靠度条目 (≥7): {len(library.get_validated_items())}",
+        f"- 本次新增/更新: {len(all_new_cogs)}",
+        f"  - 来自自己交易: {len(trade_cogs)}",
+        f"  - 来自市场观察: {len(market_cogs)}",
+        f"- 已验证高可靠度条目 (≥7, 含普适性): {len(library.get_validated_items(require_generality=True))}",
         f"- 动态置信度阈值: {get_dynamic_confidence_threshold(library)}",
         "",
     ]
     
-    if new_cogs:
-        report_lines.append("## 本次提取的认知")
+    if trade_cogs:
+        report_lines.append("## 本次从交易提取的认知")
         report_lines.append("")
-        for cog in new_cogs:
+        for cog in trade_cogs:
             report_lines.append(f"- **[{cog.category}]** {cog.lesson} (可靠度:{cog.confidence})")
+        report_lines.append("")
+    
+    if market_cogs:
+        report_lines.append("## 本次从市场观察提取的认知")
+        report_lines.append("")
+        for cog in market_cogs:
+            report_lines.append(f"- **[{cog.category}]** {cog.lesson} (普适性:{cog.uniqueness_score}/10, 品种:{cog.cross_commodity_count})")
         report_lines.append("")
     
     if library.evolved_prompt_additions:

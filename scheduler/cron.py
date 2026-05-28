@@ -28,6 +28,7 @@ from intraday.morning_scan import run_morning_scan, load_commodities
 from intraday.close_position import run_close_position
 from intraday.evening_review import run_evening_review
 from scripts.generate_industry_research import run_generation
+from scripts.weekly_alpha_pai_exploration import run_weekly_exploration
 from research.industry_mapping import get_all_industries
 
 logging.basicConfig(
@@ -97,6 +98,15 @@ def job_industry_research_update():
         logger.error(f"行业一页纸更新失败: {e}")
 
 
+def job_weekly_exploration():
+    """每周日 20:00 Alpha派 策略探索"""
+    logger.info("定时任务触发: 每周 Alpha派 策略探索")
+    try:
+        asyncio.run(run_weekly_exploration())
+    except Exception as e:
+        logger.error(f"每周策略探索失败: {e}")
+
+
 def setup_schedule():
     """配置定时任务"""
     # 09:05 商品期货扫描
@@ -128,12 +138,16 @@ def setup_schedule():
     # 每周一 08:00 更新行业一页纸（只更新过期/缺失的）
     schedule.every().monday.at("08:00").do(job_industry_research_update)
 
+    # 每周日 20:00 Alpha派 策略探索
+    schedule.every().sunday.at("20:00").do(job_weekly_exploration)
+
     logger.info("定时任务已配置")
     logger.info("  08:00 行业一页纸更新 (每周一)")
     logger.info("  09:05 商品期货扫描 (周一至周五)")
     logger.info("  09:35 金融期货扫描 (周一至周五, 中金所09:30开盘)")
     logger.info("  14:55 平仓记录 (周一至周五)")
     logger.info("  19:00 复盘 (周一至周五)")
+    logger.info("  20:00 每周 Alpha派 策略探索 (每周日)")
 
 
 def run_scheduler():

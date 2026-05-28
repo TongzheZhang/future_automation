@@ -18,9 +18,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from research.llm_integration import LLMClient
 from data.collectors.alpha_pai import AlphaPaiCollector
+from data.collectors.alpha_pai_research import AlphaPaiResearchAdvisor
 from intraday.record import load_signals, load_trades, save_review
 from intraday.models import DailyReview, TradeStatus
 from intraday.evolution import run_evolution
+from intraday.market_scan import run_market_scan, MarketScanResult
 
 logging.basicConfig(
     level=logging.INFO,
@@ -44,6 +46,40 @@ async def run_evening_review(date: str = None):
     review = DailyReview(date=date, signals=signals, trades=trades)
     review.compute_stats()
     
+    # 【新增】市场行情扫描（全市场逆向学习）
+    market_scan_result: MarketScanResult = None
+    try:
+        market_scan_result = await run_market_scan(date=date)
+        logger.info("市场行情扫描完成")
+    except Exception as e:
+        logger.error(f"市场行情扫描失败: {e}")
+    
+    # Alpha派 Missed Opportunities 分析（无论有无交易都执行）
+    missed_opportunities = ""
+    if market_scan_result and market_scan_result.performances:
+        try:
+            advisor = AlphaPaiResearchAdvisor()
+            scan_results = []
+            for p in market_scan_result.performances:
+                scan_results.append({
+                    "code": p.commodity,
+                    "name": p.name,
+                    "open": p.open_price,
+                    "close": p.close_price,
+                    "change_pct": p.change_pct,
+                    "amplitude_pct": p.amplitude_pct,
+                    "direction_reason": "系统观望（无高置信度信号）",
+                })
+            traded_codes = {t.commodity for t in trades}
+            missed_opportunities = await advisor.analyze_missed_opportunities(
+                scan_results=scan_results,
+                traded_codes=traded_codes,
+            )
+            if missed_opportunities:
+                logger.info("Alpha派 Missed Opportunities 分析完成")
+        except Exception as e:
+            logger.error(f"Alpha派 Missed Opportunities 分析失败: {e}")
+    
     # LLM 深度复盘
     if trades:
         review.review_summary = await _llm_review(trades, signals)
@@ -54,12 +90,16 @@ async def run_evening_review(date: str = None):
     else:
         review.review_summary = "今日无交易，无复盘内容。"
     
+    # 追加 Missed Opportunities 分析
+    if missed_opportunities:
+        review.review_summary += f"\n\n---\n\n【Alpha派 Missed Opportunities 分析】\n{missed_opportunities}"
+    
     # 保存复盘
     save_review(review)
     
-    # 策略自我进化
+    # 策略自我进化（从自己交易 + 市场观察中提取）
     try:
-        await run_evolution(review)
+        await run_evolution(review, market_scan_result)
     except Exception as e:
         logger.error(f"策略进化失败: {e}")
     
@@ -88,6 +128,22 @@ async def run_evening_review(date: str = None):
         if t.review_notes:
             report_lines.append(f"  复盘: {t.review_notes}")
         report_lines.append("")
+    
+    if market_scan_result:
+        report_lines.append("## 市场行情扫描")
+        report_lines.append("")
+        report_lines.append(f"[市场扫描报告](market_scan_{date}.md)")
+        report_lines.append("")
+        if market_scan_result.extracted_lessons:
+            report_lines.append("**全市场提取的普适性规律：**")
+            for lesson in market_scan_result.extracted_lessons:
+                report_lines.append(f"- [{lesson.get('category', 'general')}] {lesson.get('lesson', '')} (普适性:{lesson.get('universality_score', 0)}/10)")
+            report_lines.append("")
+        if missed_opportunities:
+            report_lines.append("## Alpha派 Missed Opportunities 分析")
+            report_lines.append("")
+            report_lines.append(missed_opportunities)
+            report_lines.append("")
     
     if review.review_summary:
         report_lines.append("## LLM 深度复盘")

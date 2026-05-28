@@ -212,6 +212,12 @@ class CognitionItem(BaseModel):
     created_at: datetime = Field(default_factory=datetime.now)
     status: str = Field(default="pending", description="pending / validated / invalidated")
     
+    # 防过拟合字段（新增）
+    source_type: str = Field(default="own_trade", description="来源: own_trade / market_observation")
+    cross_commodity_count: int = Field(default=1, ge=1, description="该认知在多少个品种上被观察到")
+    cross_date_count: int = Field(default=1, ge=1, description="该认知在多少个交易日被观察到")
+    uniqueness_score: int = Field(default=5, ge=0, le=10, description="独特性评分 0-10，越低越普适")
+    
     def record_verification(self, is_win: bool):
         """记录一次验证结果"""
         self.verification_count += 1
@@ -233,7 +239,12 @@ class CognitionItem(BaseModel):
     def to_prompt_rule(self) -> str:
         """转换为 prompt 经验规则格式"""
         status_emoji = {"pending": "⏳", "validated": "✅", "invalidated": "❌"}.get(self.status, "⏳")
-        return f"{status_emoji} [{self.category}] {self.lesson} (可靠度:{self.confidence}/10,验证:{self.verification_count}次)"
+        source_emoji = {"own_trade": "🎯", "market_observation": "👁"}.get(self.source_type, "🎯")
+        return f"{status_emoji} {source_emoji} [{self.category}] {self.lesson} (可靠度:{self.confidence}/10,普适:{self.uniqueness_score}/10,品种:{self.cross_commodity_count},日期:{self.cross_date_count})"
+    
+    def is_generally_applicable(self) -> bool:
+        """判断是否具有足够的普适性"""
+        return self.cross_commodity_count >= 3 and self.cross_date_count >= 3 and self.uniqueness_score <= 5
 
 
 class CognitionLibrary(BaseModel):
@@ -244,27 +255,49 @@ class CognitionLibrary(BaseModel):
     items: List[CognitionItem] = Field(default_factory=list)
     evolved_prompt_additions: str = Field(default="", description="累积追加到 strategy prompt 的经验规则文本")
     
-    def get_validated_items(self, min_confidence: int = 7) -> List[CognitionItem]:
-        """获取已验证的高可靠度条目"""
-        return [
+    def get_validated_items(self, min_confidence: int = 7, require_generality: bool = False) -> List[CognitionItem]:
+        """获取已验证的高可靠度条目
+        
+        Args:
+            min_confidence: 最低可靠度
+            require_generality: 是否要求具备跨品种/跨日期普适性（默认False保持向后兼容）
+        """
+        result = [
             item for item in self.items
             if item.confidence >= min_confidence and item.status in ["pending", "validated"]
         ]
+        if require_generality:
+            result = [item for item in result if item.is_generally_applicable()]
+        return result
     
     def get_items_by_category(self, category: str) -> List[CognitionItem]:
         """按类别获取条目"""
         return [item for item in self.items if item.category == category]
     
     def rebuild_prompt_additions(self, max_length: int = 2000) -> str:
-        """重新构建 prompt 追加文本"""
-        validated = self.get_validated_items()
+        """重新构建 prompt 追加文本（优先使用具备普适性的认知，冷启动期使用高置信度认知）"""
+        validated = self.get_validated_items(require_generality=True)
+
+        # 冷启动期：若无普适性认知，退而使用高置信度(≥8)认知作为"试用期规则"
+        if not validated:
+            validated = self.get_validated_items(min_confidence=8, require_generality=False)
+            is_bootstrapping = True
+        else:
+            is_bootstrapping = False
+
         if not validated:
             return ""
-        
+
         lines = ["\n【系统进化经验规则（基于历史复盘自动积累）】"]
+        if is_bootstrapping:
+            lines.append("（注：以下规则处于试用期，尚未经过充分跨日期验证，请结合自身判断参考使用）")
+
         for i, item in enumerate(validated, 1):
-            lines.append(f"{i}. {item.to_prompt_rule()}")
-        
+            rule = item.to_prompt_rule()
+            if is_bootstrapping:
+                rule = rule.replace("⏳", "⏳[试用期]", 1)
+            lines.append(f"{i}. {rule}")
+
         text = "\n".join(lines)
         if len(text) > max_length:
             text = text[:max_length] + "\n...（规则过多，已截断）"

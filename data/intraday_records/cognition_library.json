@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated_at": "2026-05-26T18:16:13.437762",
+  "updated_at": "2026-05-28T13:52:28.007087",
   "items": [
     {
       "id": "COG-20260526-03",
@@ -15,7 +15,79 @@
       ],
       "source_trade_date": "2026-05-26",
       "created_at": "2026-05-26T18:16:13.437094",
-      "status": "pending"
+      "status": "pending",
+      "source_type": "own_trade",
+      "cross_commodity_count": 1,
+      "cross_date_count": 1,
+      "uniqueness_score": 5
+    },
+    {
+      "id": "MKT-20260528-03",
+      "lesson": "原油新闻发布后30分钟内能化品种波动率提升",
+      "category": "entry_timing",
+      "confidence": 9,
+      "verification_count": 0,
+      "win_count": 0,
+      "loss_count": 0,
+      "affected_commodities": [
+        "PTA",
+        "燃料油",
+        "原油"
+      ],
+      "source_trade_date": "2026-05-28",
+      "created_at": "2026-05-28T11:31:40.920205",
+      "status": "pending",
+      "source_type": "market_observation",
+      "cross_commodity_count": 3,
+      "cross_date_count": 1,
+      "uniqueness_score": 1
+    },
+    {
+      "id": "MKT-20260528-01",
+      "lesson": "原油价格波动对能源和工业品板块具有显著联动效应",
+      "category": "market_regime",
+      "confidence": 9,
+      "verification_count": 0,
+      "win_count": 0,
+      "loss_count": 0,
+      "affected_commodities": [
+        "PTA",
+        "FU",
+        "RB",
+        "I",
+        "J"
+      ],
+      "source_trade_date": "2026-05-28",
+      "created_at": "2026-05-28T11:33:52.170992",
+      "status": "pending",
+      "source_type": "market_observation",
+      "cross_commodity_count": 5,
+      "cross_date_count": 1,
+      "uniqueness_score": 1
+    },
+    {
+      "id": "MKT-20260528-03",
+      "lesson": "资金流动主导日内行情",
+      "category": "market_regime",
+      "confidence": 9,
+      "verification_count": 0,
+      "win_count": 0,
+      "loss_count": 0,
+      "affected_commodities": [
+        "J",
+        "JD",
+        "SF",
+        "PG",
+        "AG",
+        "LC"
+      ],
+      "source_trade_date": "2026-05-27",
+      "created_at": "2026-05-28T13:52:28.006962",
+      "status": "pending",
+      "source_type": "market_observation",
+      "cross_commodity_count": 6,
+      "cross_date_count": 1,
+      "uniqueness_score": 1
     },
     {
       "id": "COG-20260526-01",
@@ -30,7 +102,97 @@
       ],
       "source_trade_date": "2026-05-26",
       "created_at": "2026-05-26T18:16:13.437055",
-      "status": "pending"
+      "status": "pending",
+      "source_type": "own_trade",
+      "cross_commodity_count": 1,
+      "cross_date_count": 1,
+      "uniqueness_score": 5
+    },
+    {
+      "id": "MKT-20260528-01",
+      "lesson": "原油价格波动通过产业链传导影响能化品种",
+      "category": "signal_filter",
+      "confidence": 8,
+      "verification_count": 0,
+      "win_count": 0,
+      "loss_count": 0,
+      "affected_commodities": [
+        "PTA",
+        "燃料油",
+        "沥青"
+      ],
+      "source_trade_date": "2026-05-28",
+      "created_at": "2026-05-28T11:31:40.920181",
+      "status": "pending",
+      "source_type": "market_observation",
+      "cross_commodity_count": 3,
+      "cross_date_count": 1,
+      "uniqueness_score": 2
+    },
+    {
+      "id": "MKT-20260528-04",
+      "lesson": "跨品种对冲：做多原油敏感度低的品种+做空能化品种",
+      "category": "risk_control",
+      "confidence": 8,
+      "verification_count": 0,
+      "win_count": 0,
+      "loss_count": 0,
+      "affected_commodities": [
+        "股指期货",
+        "PTA"
+      ],
+      "source_trade_date": "2026-05-28",
+      "created_at": "2026-05-28T11:31:40.920214",
+      "status": "pending",
+      "source_type": "market_observation",
+      "cross_commodity_count": 2,
+      "cross_date_count": 1,
+      "uniqueness_score": 2
+    },
+    {
+      "id": "MKT-20260528-02",
+      "lesson": "高成交量和高持仓量加剧价格波动",
+      "category": "risk_control",
+      "confidence": 8,
+      "verification_count": 0,
+      "win_count": 0,
+      "loss_count": 0,
+      "affected_commodities": [
+        "PTA",
+        "RB",
+        "I"
+      ],
+      "source_trade_date": "2026-05-28",
+      "created_at": "2026-05-28T11:33:52.171006",
+      "status": "pending",
+      "source_type": "market_observation",
+      "cross_commodity_count": 3,
+      "cross_date_count": 1,
+      "uniqueness_score": 2
+    },
+    {
+      "id": "MKT-20260528-01",
+      "lesson": "高成交量伴随高波动",
+      "category": "signal_filter",
+      "confidence": 8,
+      "verification_count": 0,
+      "win_count": 0,
+      "loss_count": 0,
+      "affected_commodities": [
+        "J",
+        "JD",
+        "SF",
+        "PG",
+        "AG",
+        "LC"
+      ],
+      "source_trade_date": "2026-05-27",
+      "created_at": "2026-05-28T13:52:28.006936",
+      "status": "pending",
+      "source_type": "market_observation",
+      "cross_commodity_count": 6,
+      "cross_date_count": 1,
+      "uniqueness_score": 2
     },
     {
       "id": "COG-20260526-02",
@@ -45,7 +207,11 @@
       ],
       "source_trade_date": "2026-05-26",
       "created_at": "2026-05-26T18:16:13.437088",
-      "status": "pending"
+      "status": "pending",
+      "source_type": "own_trade",
+      "cross_commodity_count": 1,
+      "cross_date_count": 1,
+      "uniqueness_score": 5
     },
     {
       "id": "COG-20260526-04",
@@ -60,8 +226,53 @@
       ],
       "source_trade_date": "2026-05-26",
       "created_at": "2026-05-26T18:16:13.437098",
-      "status": "pending"
+      "status": "pending",
+      "source_type": "own_trade",
+      "cross_commodity_count": 1,
+      "cross_date_count": 1,
+      "uniqueness_score": 5
+    },
+    {
+      "id": "MKT-20260528-02",
+      "lesson": "持仓量增加伴随价格跌破支撑位时加速下跌",
+      "category": "exit_timing",
+      "confidence": 7,
+      "verification_count": 0,
+      "win_count": 0,
+      "loss_count": 0,
+      "affected_commodities": [
+        "螺纹钢",
+        "铁矿石"
+      ],
+      "source_trade_date": "2026-05-28",
+      "created_at": "2026-05-28T11:31:40.920196",
+      "status": "pending",
+      "source_type": "market_observation",
+      "cross_commodity_count": 2,
+      "cross_date_count": 1,
+      "uniqueness_score": 3
+    },
+    {
+      "id": "MKT-20260528-02",
+      "lesson": "情绪驱动短期波动",
+      "category": "entry_timing",
+      "confidence": 7,
+      "verification_count": 0,
+      "win_count": 0,
+      "loss_count": 0,
+      "affected_commodities": [
+        "J",
+        "PG",
+        "AG"
+      ],
+      "source_trade_date": "2026-05-27",
+      "created_at": "2026-05-28T13:52:28.006952",
+      "status": "pending",
+      "source_type": "market_observation",
+      "cross_commodity_count": 3,
+      "cross_date_count": 1,
+      "uniqueness_score": 3
     }
   ],
-  "evolved_prompt_additions": "\n【系统进化经验规则（基于历史复盘自动积累）】\n1. ⏳ [risk_control] 明确止损点位，建议设置在日内高点上方，以控制潜在风险 (可靠度:9/10,验证:1次)\n2. ⏳ [entry_timing] 开盘后等待价格反弹至关键阻力位再入场，可优化风险收益比 (可靠度:8/10,验证:1次)\n3. ⏳ [exit_timing] 在价格接近日内低点时部分平仓，可锁定更多利润 (可靠度:7/10,验证:1次)\n4. ⏳ [signal_filter] 价跌+持仓增+成交放可作为空头开仓的同步信号，但需验证盘口数据 (可靠度:7/10,验证:1次)"
+  "evolved_prompt_additions": ""
 }

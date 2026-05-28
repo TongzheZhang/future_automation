@@ -23,6 +23,8 @@ from intraday.strategy import IntradayStrategy
 from intraday.record import save_signals
 from intraday.models import IntradaySignal
 from data.collectors.minute_data import MinuteDataCollector
+from data.collectors.brave_search import BraveSearchCollector
+from data.collectors.alpha_pai_research import AlphaPaiResearchAdvisor
 
 logging.basicConfig(
     level=logging.INFO,
@@ -89,8 +91,40 @@ async def run_morning_scan(
         logger.info(f"商品期货时间窗口: {entry_time} 开仓 → {exit_time} 平仓")
     
     strategy = IntradayStrategy()
+    advisor = AlphaPaiResearchAdvisor()
+    brave = BraveSearchCollector()
     
     try:
+        # ====== 盘前 Alpha派 顾问简报 ======
+        premarket_briefing = ""
+        try:
+            logger.info("正在获取 Alpha派 盘前顾问简报...")
+            # 搜索隔夜新闻
+            overnight_news = await brave.search(
+                query="期货 隔夜 消息 外盘 涨跌幅 2026",
+                count=5,
+                freshness="pd",
+            )
+            news_summary = "\n".join([f"- {r.title}: {r.description}" for r in overnight_news[:3]])
+            # 搜索外盘变动
+            market_moves = await brave.search(
+                query="美股 原油 黄金 铜 隔夜 涨跌幅",
+                count=5,
+                freshness="pd",
+            )
+            moves_summary = "\n".join([f"- {r.title}: {r.description}" for r in market_moves[:3]])
+            # 获取 Alpha派 简报
+            premarket_briefing = await advisor.get_premarket_briefing(
+                overnight_news=news_summary,
+                market_moves=moves_summary,
+                date=date_str,
+            )
+            if premarket_briefing:
+                strategy.set_premarket_briefing(premarket_briefing)
+                logger.info("Alpha派 盘前简报已获取")
+        except Exception as e:
+            logger.error(f"Alpha派 盘前简报获取失败: {e}")
+        
         # 加载品种
         all_commodities = load_commodities(config_path, exchange_filter=exchange_filter)
         if focused:
@@ -145,10 +179,19 @@ async def run_morning_scan(
             "",
             f"**策略时间窗口**: {entry_time} 开仓 → {exit_time} 平仓",
             "",
+        ]
+        
+        if premarket_briefing:
+            report_lines.append("## Alpha派 盘前顾问简报")
+            report_lines.append("")
+            report_lines.append(premarket_briefing)
+            report_lines.append("")
+        
+        report_lines.extend([
             f"扫描品种数: {len(commodities)}",
             f"有效信号数: {len(signals)}",
             "",
-        ]
+        ])
         
         if signals:
             report_lines.append("## 推荐交易")
